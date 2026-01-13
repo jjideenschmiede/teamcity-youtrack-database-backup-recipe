@@ -1,0 +1,21 @@
+name: jjideenschmiede/youtrack-backup-recipe
+title: YouTrack Backup Recipe
+version: 1.0.0
+description: |
+  Creates a new database backup for a YouTrack instance.
+inputs:
+  - env.input_youtrack_base_url:
+      type: text
+      required: true
+      label: YouTrack Base URL
+      description: |
+        The base URL of your YouTrack instance (e.g., https://youtrack.example.com).
+  - env.input_youtrack_token:
+      type: text
+      required: true
+      label: YouTrack Permanent Token
+      description: |
+        The permanent token for authentication with the YouTrack API.
+steps:
+  - name: Trigger YouTrack Database Backup
+    kotlin-script: !include src.main.kts
