@@ -12,8 +12,6 @@ val youtrackBaseUrl: String = System.getenv("input_youtrack_base_url")
     ?: error("Input \"youtrack_base_url\" is not set.")
 val youtrackToken: String = System.getenv("input_youtrack_token")
     ?: error("Input \"youtrack_token\" is not set.")
-val pollIntervalSeconds: Long = System.getenv("input_poll_interval_seconds")?.toLongOrNull() ?: 10L
-val maxWaitMinutes: Long = System.getenv("input_max_wait_minutes")?.toLongOrNull() ?: 60L
 
 val settingsURL: String = "${youtrackBaseUrl.trimEnd('/')}/api/admin/databaseBackup/settings"
 val statusURL: String = "${youtrackBaseUrl.trimEnd('/')}/api/admin/databaseBackup/settings/backupStatus?fields=backupCancelled,backupError(date,errorMessage),backupInProgress,stopBackup"
@@ -23,19 +21,19 @@ val client: HttpClient = HttpClient.newBuilder()
 
 println("Triggering YouTrack backup at: $settingsURL")
 
-val startPayload: String = buildJsonObject {
-    put("backupStatus", buildJsonObject {
-        put("backupInProgress", true)
-    })
-}.toString()
-
 val startRequest: HttpRequest = HttpRequest.newBuilder()
     .uri(URI.create(settingsURL))
     .header("Accept", "application/json")
     .header("Content-Type", "application/json")
     .header("Authorization", "Bearer $youtrackToken")
     .timeout(java.time.Duration.ofSeconds(60))
-    .POST(HttpRequest.BodyPublishers.ofString(startPayload))
+    .POST(HttpRequest.BodyPublishers.ofString(
+        buildJsonObject {
+            put("backupStatus", buildJsonObject {
+                put("backupInProgress", true)
+            })
+        }.toString()
+    ))
     .build()
 
 val startResponse: HttpResponse<String> = client.send(startRequest, HttpResponse.BodyHandlers.ofString())
@@ -45,24 +43,20 @@ when (startResponse.statusCode()) {
     else -> error("Failed to trigger backup (HTTP ${startResponse.statusCode()}): ${startResponse.body()}")
 }
 
-println("\nMonitoring backup status (polling every ${pollIntervalSeconds}s, max wait: ${maxWaitMinutes}min)...")
-
 val startTime: Long = System.currentTimeMillis()
-val maxWaitMillis: Long = maxWaitMinutes * 60 * 1000
 var backupCompleted = false
 var pollCount = 0
 
 while (!backupCompleted) {
-    if (System.currentTimeMillis() - startTime > maxWaitMillis) {
-        error("Backup did not complete within $maxWaitMinutes minutes")
+    if (System.currentTimeMillis() - startTime > 60 * 60 * 1000) {
+        error("Backup did not complete within 60 minutes")
     }
 
-    Thread.sleep(pollIntervalSeconds * 1000)
+    Thread.sleep(10 * 1000)
     pollCount++
 
     if (pollCount % 6 == 0) {
-        val elapsedSeconds = (System.currentTimeMillis() - startTime) / 1000
-        println(" (${elapsedSeconds}s elapsed)")
+        println(" (${(System.currentTimeMillis() - startTime) / 1000}s elapsed)")
     } else {
         print(".")
     }
@@ -87,22 +81,16 @@ while (!backupCompleted) {
 
     val json = Json.parseToJsonElement(statusResponse.body()).jsonObject
 
-    val inProgress = json["backupInProgress"]?.jsonPrimitive?.boolean ?: true
-    val backupCancelled = json["backupCancelled"]?.jsonPrimitive?.boolean ?: false
-    val backupErrorElement = json["backupError"]
-    val backupError = if (backupErrorElement is JsonObject) {
-        backupErrorElement["errorMessage"]?.jsonPrimitive?.contentOrNull
-    } else {
-        null
-    }
-
     when {
-        backupCancelled -> error("Backup was cancelled")
-        backupError != null -> error("Backup failed with error: $backupError")
-        !inProgress -> {
+        json["backupCancelled"]?.jsonPrimitive?.boolean == true ->
+            error("Backup was cancelled")
+
+        json["backupError"] is JsonObject ->
+            error("Backup failed with error: ${json["backupError"]?.jsonObject?.get("errorMessage")?.jsonPrimitive?.contentOrNull}")
+
+        json["backupInProgress"]?.jsonPrimitive?.boolean == false -> {
             backupCompleted = true
-            val elapsedSeconds = (System.currentTimeMillis() - startTime) / 1000
-            println("\n✓ Backup completed successfully after ${elapsedSeconds}s")
+            println("\n✓ Backup completed successfully after ${(System.currentTimeMillis() - startTime) / 1000}s")
         }
     }
 }
