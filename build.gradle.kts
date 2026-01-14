@@ -4,7 +4,7 @@ tasks.register("recipe") {
         outputDir.mkdirs()
 
         val inputFile = file("src/recipe.yml")
-		val fileName = "youtrack-backup-recipe"
+		val fileName = "youtrack-database-backup"
         val outputFile = outputDir.resolve("$fileName.yml")
 
         if (inputFile.exists()) {
