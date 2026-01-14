@@ -2,7 +2,7 @@ name: jjideenschmiede/youtrack-backup-recipe
 title: YouTrack Backup Recipe
 version: 1.1.0
 description: |
-  Creates a new database backup for a YouTrack instance.
+  Creates a new database backup for a YouTrack instance and verifies that the backup was successfully created.
 inputs:
   - env.input_youtrack_base_url:
       type: text

@@ -1,6 +1,6 @@
 # TeamCity YouTrack Backup Recipe
 
-This TeamCity Recipe triggers a database backup for a YouTrack instance using the YouTrack REST API.
+This TeamCity Recipe triggers a database backup for a YouTrack instance using the YouTrack REST API and verifies that the backup was successfully created.
 
 ---
 
