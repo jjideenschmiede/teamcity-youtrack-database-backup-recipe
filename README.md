@@ -21,7 +21,7 @@ We are **TeamCity Certified** and **YouTrack Certified** developers, specializin
 
 ## Requirements
 
-You need to have TeamCity 2025.03 or later installed to use this recipe. If you are using an older version than 2025.07, you need to upload the `youtrack-backup-recipe.yml`, which contains the complete recipe. If you are using TeamCity 2025.07 or later, you can use the `jjideenschmiede/youtrack-backup-recipe` recipe directly from the JetBrains Marketplace.
+You need to have TeamCity 2025.03 or later installed to use this recipe. If you are using an older version than 2025.07, you need to upload the `youtrack-database-backup.yml`, which contains the complete recipe. If you are using TeamCity 2025.07 or later, you can use the `jjideenschmiede/youtrack-database-backup` recipe directly from the JetBrains Marketplace.
 
 ## Build
 
