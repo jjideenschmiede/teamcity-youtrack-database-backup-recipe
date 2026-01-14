@@ -12,8 +12,9 @@ val youtrackBaseUrl: String = System.getenv("input_youtrack_base_url")
     ?: error("Input \"youtrack_base_url\" is not set.")
 val youtrackToken: String = System.getenv("input_youtrack_token")
     ?: error("Input \"youtrack_token\" is not set.")
-val pollIntervalSeconds: Long = System.getenv("input_poll_interval_seconds")?.toLongOrNull() ?: 10L
-val maxWaitMinutes: Long = System.getenv("input_max_wait_minutes")?.toLongOrNull() ?: 60L
+
+val pollIntervalSeconds: Long = 10L
+val maxWaitMinutes: Long = 60L
 
 val settingsURL: String = "${youtrackBaseUrl.trimEnd('/')}/api/admin/databaseBackup/settings"
 val statusURL: String = "${youtrackBaseUrl.trimEnd('/')}/api/admin/databaseBackup/settings/backupStatus?fields=backupCancelled,backupError(date,errorMessage),backupInProgress,stopBackup"
